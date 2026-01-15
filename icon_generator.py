@@ -333,12 +333,14 @@ class IconGeneratorApp:
     def generate_ico_multisize(self, source_img):
         """Generate a multisize .ico file with maximum quality"""
         try:
-            self.progress_bar["maximum"] = len(ICO_SIZES)
+            self.progress_bar["maximum"] = len(ICO_SIZES) + 1
             self.progress_bar["value"] = 0
             
-            # Create resized versions for all sizes
+            # Create resized versions for all sizes in descending order (largest first)
             icon_images = []
-            for idx, size in enumerate(ICO_SIZES):
+            sizes_in_order = sorted(ICO_SIZES, reverse=True)
+            
+            for idx, size in enumerate(sizes_in_order):
                 self.update_status(f"Preparing {size}x{size} icon layer...")
                 
                 # Resize with maximum quality using LANCZOS resampling
@@ -355,16 +357,19 @@ class IconGeneratorApp:
             self.update_status("Saving icon.ico file...")
             output_path = Path(self.output_directory) / "icon.ico"
             
-            # Save the first image and append the rest as additional sizes
-            # PIL automatically handles ICO format with multiple sizes
-            icon_images[0].save(
-                output_path,
-                format="ICO",
-                sizes=[(size, size) for size in ICO_SIZES],
-                append_images=icon_images[1:]
-            )
+            # ICO format: PIL requires images in descending size order
+            # The first image should be the largest
+            if len(icon_images) > 1:
+                icon_images[0].save(
+                    output_path,
+                    format="ICO",
+                    append_images=icon_images[1:]
+                )
+            else:
+                icon_images[0].save(output_path, format="ICO")
             
             size_list = ", ".join([f"{s}px" for s in ICO_SIZES])
+            self.progress_bar["value"] = len(ICO_SIZES) + 1
             self.update_status(f"✓ Successfully generated icon.ico with {len(ICO_SIZES)} sizes!", "green")
             messagebox.showinfo(
                 "Success",
