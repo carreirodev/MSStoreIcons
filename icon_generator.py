@@ -48,9 +48,13 @@ WIDE_CONFIGS = [
     ("Wide310x150Logo.scale-400.png", 1240, 600),
 ]
 
+# ICO multisize configurations
+ICO_SIZES = [16, 32, 48, 64, 128, 256, 512]
+
 ICON_CONFIGS = {
     "square": SQUARE_CONFIGS,
     "wide": WIDE_CONFIGS,
+    "ico": [],  # ICO multisize doesn't use the same config structure
 }
 
 
@@ -118,12 +122,19 @@ class IconGeneratorApp:
             value="wide"
         ).pack(anchor=tk.W, pady=2)
         
+        ttk.Radiobutton(
+            type_frame,
+            text="ICO Multisize (16-512px) - 1 .ico file with 7 sizes",
+            variable=self.icon_type_var,
+            value="ico"
+        ).pack(anchor=tk.W, pady=2)
+        
         # Info about aspect ratio
         info_frame = ttk.Frame(type_frame)
         info_frame.pack(fill=tk.X, pady=2)
         ttk.Label(
             info_frame,
-            text="ℹ Square: use 1:1 image  |  Wide: use 310x150 image",
+            text="ℹ Square/ICO: use 1:1 image  |  Wide: use 310x150 image",
             font=("Arial", 8),
             foreground="gray"
         ).pack(anchor=tk.W)
@@ -193,16 +204,17 @@ class IconGeneratorApp:
                 icon_type = self.icon_type_var.get()
                 
                 # Check aspect ratio based on selected icon type
-                if icon_type == "square":
-                    # For square icons, aspect ratio should be 1:1
+                if icon_type in ["square", "ico"]:
+                    # For square icons and ICO, aspect ratio should be 1:1
                     aspect_ratio = width / height if height > 0 else 0
                     
                     if abs(aspect_ratio - 1.0) > 0.05:  # Allow 5% tolerance
+                        icon_name = "Square" if icon_type == "square" else "ICO"
                         messagebox.showerror(
                             "Invalid Aspect Ratio",
                             f"Current image size: {width}x{height}\n"
                             f"Aspect ratio: {aspect_ratio:.2f}\n\n"
-                            f"Square icons require a 1:1 aspect ratio (square image)\n"
+                            f"{icon_name} icons require a 1:1 aspect ratio (square image)\n"
                             f"Please select a square image."
                         )
                         return
@@ -270,6 +282,12 @@ class IconGeneratorApp:
                 source_img = source_img.convert("RGBA")
             
             icon_type = self.icon_type_var.get()
+            
+            # Handle ICO multisize generation separately
+            if icon_type == "ico":
+                self.generate_ico_multisize(source_img)
+                return
+            
             configs = ICON_CONFIGS[icon_type]
             
             self.progress_bar["maximum"] = len(configs)
@@ -311,6 +329,54 @@ class IconGeneratorApp:
         
         finally:
             self.generate_button.config(state=tk.NORMAL)
+    
+    def generate_ico_multisize(self, source_img):
+        """Generate a multisize .ico file with maximum quality"""
+        try:
+            self.progress_bar["maximum"] = len(ICO_SIZES)
+            self.progress_bar["value"] = 0
+            
+            # Create resized versions for all sizes
+            icon_images = []
+            for idx, size in enumerate(ICO_SIZES):
+                self.update_status(f"Preparing {size}x{size} icon layer...")
+                
+                # Resize with maximum quality using LANCZOS resampling
+                resized_img = source_img.resize(
+                    (size, size),
+                    Image.Resampling.LANCZOS
+                )
+                
+                icon_images.append(resized_img)
+                self.progress_bar["value"] = idx + 1
+                self.root.update()
+            
+            # Save as multisize ICO file
+            self.update_status("Saving icon.ico file...")
+            output_path = Path(self.output_directory) / "icon.ico"
+            
+            # Save the first image and append the rest as additional sizes
+            # PIL automatically handles ICO format with multiple sizes
+            icon_images[0].save(
+                output_path,
+                format="ICO",
+                sizes=[(size, size) for size in ICO_SIZES],
+                append_images=icon_images[1:]
+            )
+            
+            size_list = ", ".join([f"{s}px" for s in ICO_SIZES])
+            self.update_status(f"✓ Successfully generated icon.ico with {len(ICO_SIZES)} sizes!", "green")
+            messagebox.showinfo(
+                "Success",
+                f"Successfully generated icon.ico!\n\n"
+                f"Sizes included: {size_list}\n\n"
+                f"Output directory:\n{self.output_directory}"
+            )
+            
+        except Exception as e:
+            self.update_status(f"✗ Error: {str(e)}", "red")
+            messagebox.showerror("Error", f"Failed to generate ICO file:\n{str(e)}")
+            raise
     
     def update_status(self, message, color="blue"):
         """Update status label"""

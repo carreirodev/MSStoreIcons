@@ -8,11 +8,12 @@ The Microsoft Store Icon Generator is a Python-based GUI application built with 
 
 ### Key Features
 
-- 🎨 **Automatic Icon Generation** - Generates 20 (Square) or 5 (Wide) icon variations from a single image
-- ✅ **Image Validation** - Validates aspect ratio before processing (1:1 for square, 310:150 for wide)
-- 🖼️ **Maximum Quality** - Uses LANCZOS resampling algorithm for best-in-class image quality
+- 🎨 **Automatic Icon Generation** - Generates 20 (Square), 5 (Wide), or 1 multisize ICO file from a single image
+- 🖼️ **ICO Multisize Support** - Creates Windows .ico files with 7 embedded sizes (16-512px)
+- ✅ **Image Validation** - Validates aspect ratio before processing (1:1 for square/ICO, 310:150 for wide)
+- 🔍 **Maximum Quality** - Uses LANCZOS resampling algorithm for best-in-class image quality
 - 📊 **Real-time Progress** - Live progress bar shows generation status
-- 💾 **Format Support** - Accepts PNG, JPG, JPEG, BMP, GIF, and TIFF formats
+- 💾 **Format Support** - Accepts PNG, JPG, JPEG, BMP, GIF, and TIFF formats (input) / PNG and ICO (output)
 - 🎯 **Correct Naming** - Automatically applies Microsoft Store naming conventions
 - 🪟 **Simple Interface** - Clean, compact Tkinter GUI with minimal learning curve
 
@@ -71,6 +72,9 @@ The Microsoft Store Icon Generator is a Python-based GUI application built with 
    - **Wide Icons**: For Windows Start menu tile
      - Requires 310x150 aspect ratio (or compatible)
      - Generates 5 variations
+   - **ICO Multisize**: For Windows executable and desktop icons
+     - Requires 1:1 aspect ratio image (square)
+     - Generates 1 .ico file with 7 embedded sizes (16px, 32px, 48px, 64px, 128px, 256px, 512px)
 
 4. **Select Output Directory**
 
@@ -127,6 +131,31 @@ The Microsoft Store Icon Generator is a Python-based GUI application built with 
 - Wide310x150Logo.scale-200.png (620×300)
 - Wide310x150Logo.scale-400.png (1240×600)
 
+#### ICO Multisize
+
+- **Input**: Square image with 1:1 aspect ratio
+- **Recommended Size**: 512x512 or larger
+- **Format**: PNG (for transparency support)
+
+**Generated File:**
+
+- icon.ico - Single multisize ICO file containing:
+  - 16×16px (for small icons)
+  - 32×32px (for standard icons)
+  - 48×48px (for large icons)
+  - 64×64px (for extra large icons)
+  - 128×128px (for high-DPI displays)
+  - 256×256px (for Windows Vista+)
+  - 512×512px (for highest quality/scaling)
+
+This format is ideal for:
+
+- Windows executable (.exe) application icons
+- Desktop shortcuts
+- File type associations
+- System tray icons
+- Windows Explorer file display
+
 ## 🔍 Technical Details
 
 ### Image Processing
@@ -135,9 +164,9 @@ The application uses the following approach for image processing:
 
 1. **Format Conversion**: Input images are converted to RGBA (32-bit with alpha channel) to preserve transparency
 2. **Resampling Algorithm**: Uses LANCZOS filter for high-quality downsampling and upsampling
-3. **PNG Compression**: Saves all outputs as PNG with lossless compression (optimize=False for quality)
+3. **PNG/ICO Output**: Saves PNG outputs with lossless compression, ICO with embedded multisize layers
 4. **Aspect Ratio Validation**:
-   - Square icons require 1:1 aspect ratio (±5% tolerance)
+   - Square/ICO icons require 1:1 aspect ratio (±5% tolerance)
    - Wide icons require 310:150 ratio (±10% tolerance for flexibility)
 
 ### File Structure
@@ -205,9 +234,9 @@ The application follows Microsoft's official naming convention for Store assets:
 
 1. **Use High-Quality Source Images**
 
-   - Minimum 512×512 for square icons
+   - Minimum 512×512 for square/ICO icons
    - Minimum 620×300 for wide icons
-   - Higher resolution yields better results
+   - Higher resolution yields better results for downscaling
 
 2. **Preserve Transparency**
 
@@ -260,7 +289,14 @@ For issues, questions, or suggestions:
 
 ## 🔄 Version History
 
-### v1.0 (Current)
+### v2.0 (Current)
+
+- **New**: ICO Multisize generation (7 embedded sizes: 16-512px)
+- **Enhanced**: Improved aspect ratio validation for square images
+- **Updated**: Interface now includes third option for ICO generation
+- Maximum quality preservation with LANCZOS resampling
+
+### v1.0
 
 - Initial release
 - Square icon generation (20 variations)
