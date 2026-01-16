@@ -50,6 +50,7 @@ ENV/
 .DS_Store
 *.sublime-project
 *.sublime-workspace
+.claude/
 
 # OS files
 Thumbs.db
